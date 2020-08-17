@@ -1,13 +1,8 @@
-import { Resolver, Query } from '@nestjs/graphql';
-import { Logger } from '@nestjs/common';
+import { Resolver } from "@nestjs/graphql";
 
-import { UserService } from '../service';
-import { User } from '../model';
+import { UserService } from "../service";
+
 @Resolver()
 export class UserResolver {
-  private readonly logger = new Logger('UserResolver');
   constructor(private readonly userService: UserService) {}
-
-  @Query(() => User)
-  async test() {}
 }

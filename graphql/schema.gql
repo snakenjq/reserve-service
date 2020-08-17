@@ -2,11 +2,15 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type Restaurant {
+type TokenOutput {
+  accessToken: String!
+  refreshToken: String!
+}
+
+type Account {
   id: Float!
-  name: String!
-  intro: String
-  address: String!
+  userName: String!
+  password: String!
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -17,5 +21,16 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 scalar DateTime
 
 type Query {
-  getRestaurants: Restaurant!
+  test: Boolean!
+  signIn(input: CreateAccountInput!): TokenOutput!
+  refreshToken(refreshToken: String!): TokenOutput!
+}
+
+input CreateAccountInput {
+  userName: String!
+  password: String!
+}
+
+type Mutation {
+  signUp(input: CreateAccountInput!): Account!
 }

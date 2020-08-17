@@ -9,12 +9,12 @@ export default {
   app: {
     port: 3000,
   },
-  // jwtConfig: {
-  //   secret: 'topSecret51',
-  //   signOptions: {
-  //     expiresIn: 3600 * 10,
-  //   },
-  // },
+  jwtConfig: {
+    secret: 'topSecret51',
+    signOptions: {
+      expiresIn: 3600,
+    },
+  },
   typeOrmConfig: {
     type: DB_TYPE,
     entities: [TYPE_ORM_MODELS_PATH],
