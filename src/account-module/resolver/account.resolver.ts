@@ -1,20 +1,21 @@
-import { ValidationPipe, Logger, Req, UseGuards } from '@nestjs/common';
+import { ValidationPipe, Logger, UseFilters } from '@nestjs/common';
 import { Resolver, Mutation, Args, Query } from '@nestjs/graphql';
 
 import { AccountService } from '../service';
 import { Account } from '../model';
 import { CreateAccountInput, TokenOutput } from '../dto';
-import { AuthGuard } from '../guard';
-import { GetUser } from '../decorator';
+import { GetUser, GqlAuth } from '../decorator';
+import { GraphqlExceptionFilter, RoleType } from '../../common';
 
 @Resolver()
+@UseFilters(GraphqlExceptionFilter)
 export class AccountResolver {
   constructor(private readonly accountService: AccountService) {}
 
   @Query(() => Boolean)
-  @UseGuards(AuthGuard)
+  @GqlAuth(RoleType.ADMIN)
   async test(@GetUser('graphql') user): Promise<boolean> {
-    console.log(user.userName);
+    console.log(user);
     return true;
   }
 

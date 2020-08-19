@@ -5,10 +5,8 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Unique,
-  OneToMany,
 } from 'typeorm';
 import { ObjectType, Field } from '@nestjs/graphql';
-import { Token } from './token.model';
 
 @ObjectType()
 @Entity()

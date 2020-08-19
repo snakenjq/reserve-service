@@ -10,12 +10,14 @@ import {
   AccountResolver,
   AccountController,
 } from '.';
+import { UserModule } from 'user-module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Account]),
     TypeOrmModule.forFeature([Token]),
     JwtModule.register(config.get('jwtConfig')),
+    UserModule,
   ],
   providers: [AccountService, AccountResolver],
   controllers: [AccountController],

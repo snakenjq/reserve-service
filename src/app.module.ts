@@ -9,7 +9,11 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ScheduleModule } from '@nestjs/schedule';
 import * as config from 'config';
 
-import { AccountModule, GlobalMiddleware } from 'account-module';
+import {
+  AccountModule,
+  UserMiddleware,
+  AccountController,
+} from 'account-module';
 import { UserModule } from 'user-module';
 
 @Module({
@@ -23,8 +27,9 @@ import { UserModule } from 'user-module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(GlobalMiddleware)
-      .forRoutes({ path: 'graphql', method: RequestMethod.POST });
+    consumer.apply(UserMiddleware).forRoutes(AccountController, {
+      path: 'graphql',
+      method: RequestMethod.ALL,
+    });
   }
 }
