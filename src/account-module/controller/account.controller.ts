@@ -11,8 +11,9 @@ import {
 import { AccountService } from '../service';
 import { CreateAccountInput } from '../dto';
 import { Account } from '../model';
-import { RestfulExceptionFilter } from '../../common';
-import { RestfulAuthGuard, GetUser } from 'account-module';
+import { RestfulExceptionFilter, RoleType } from '../../common';
+import { GetUser } from 'account-module';
+import { RestfulAuth } from 'account-module/decorator';
 
 @Controller('account')
 @UseFilters(RestfulExceptionFilter)
@@ -21,7 +22,7 @@ export class AccountController {
   constructor(private readonly accountService: AccountService) {}
 
   @Post('/test')
-  @UseGuards(RestfulAuthGuard)
+  @RestfulAuth(RoleType.ADMIN)
   async test(@GetUser() user): Promise<boolean> {
     console.log('>>>AccountController test ', user);
     return true;

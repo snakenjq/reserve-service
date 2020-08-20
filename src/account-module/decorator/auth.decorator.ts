@@ -1,6 +1,10 @@
 import { applyDecorators, SetMetadata, UseGuards } from '@nestjs/common';
-import { GqlAuthGuard, GqlRolesGuard } from '../guard';
-import { ApiBearerAuth, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import {
+  GqlAuthGuard,
+  GqlRolesGuard,
+  RestfulAuthGuard,
+  RestfulRolesGuard,
+} from '../guard';
 import { RoleType } from 'common';
 
 export function GqlAuth(...roles: RoleType[]) {
@@ -13,8 +17,6 @@ export function GqlAuth(...roles: RoleType[]) {
 export function RestfulAuth(...roles: RoleType[]) {
   return applyDecorators(
     SetMetadata('roles', roles),
-    UseGuards(GqlAuthGuard, GqlRolesGuard),
-    ApiBearerAuth(),
-    ApiUnauthorizedResponse({ description: 'Unauthorized"' }),
+    UseGuards(RestfulAuthGuard, RestfulRolesGuard),
   );
 }
