@@ -33,7 +33,6 @@ enum RoleType {
 }
 
 type Query {
-  test: Boolean!
   signIn(input: CreateAccountInput!): TokenOutput!
   refreshToken(refreshToken: String!): TokenOutput!
   createUser(input: CreateUserInput!): User!
@@ -50,4 +49,11 @@ input CreateUserInput {
 
 type Mutation {
   signUp(input: CreateAccountInput!): Account!
+  updatePassword(input: UpdatePasswordInput!): Account!
+  deleteAccountByID(id: Float!): Boolean!
+}
+
+input UpdatePasswordInput {
+  password: String!
+  newPassword: String!
 }

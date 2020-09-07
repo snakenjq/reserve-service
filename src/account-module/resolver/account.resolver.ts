@@ -1,9 +1,9 @@
-import { ValidationPipe, Logger, UseFilters, UseGuards } from '@nestjs/common';
+import { ValidationPipe, UseFilters, UseGuards } from '@nestjs/common';
 import { Resolver, Mutation, Args, Query } from '@nestjs/graphql';
 
 import { AccountService } from '../service';
 import { Account } from '../model';
-import { CreateAccountInput, TokenOutput } from '../dto';
+import { CreateAccountInput, TokenOutput, UpdatePasswordInput } from '../dto';
 import { GetUser, GqlAuth } from '../decorator';
 import { GraphqlExceptionFilter, RoleType } from '../../common';
 import { GqlAuthGuard } from 'account-module/guard';
@@ -12,13 +12,6 @@ import { GqlAuthGuard } from 'account-module/guard';
 @UseFilters(GraphqlExceptionFilter)
 export class AccountResolver {
   constructor(private readonly accountService: AccountService) {}
-
-  @Query(() => Boolean)
-  @GqlAuth(RoleType.ADMIN)
-  async test(@GetUser('graphql') user): Promise<boolean> {
-    console.log(user);
-    return true;
-  }
 
   @Mutation(() => Account)
   async signUp(
@@ -38,5 +31,21 @@ export class AccountResolver {
     @Args('refreshToken') refreshToken: string,
   ): Promise<Object> {
     return await this.accountService.verifyRefreshToken(refreshToken);
+  }
+
+  @Mutation(() => Account)
+  @UseGuards(GqlAuthGuard)
+  async updatePassword(
+    @GetUser('graphql') user,
+    @Args('input') input: UpdatePasswordInput,
+  ): Promise<Account> {
+    await this.accountService.updatePassword(user, input);
+    return this.accountService.findById(user.id);
+  }
+
+  @Mutation(() => Boolean)
+  @GqlAuth(RoleType.ADMIN)
+  async deleteAccountByID(@Args('id') id: number): Promise<boolean> {
+    return this.accountService.delete(id);
   }
 }

@@ -13,7 +13,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
 import { Account } from '../model';
-import { CreateAccountInput, TokenOutput } from '../dto';
+import { CreateAccountInput, TokenOutput, UpdatePasswordInput } from '../dto';
 import { AuthPayload } from '../interface';
 import { CacheService } from './redis.service';
 
@@ -92,6 +92,38 @@ export class AccountService {
     }
   }
 
+  async updatePassword(
+    user: Account,
+    input: UpdatePasswordInput,
+  ): Promise<boolean> {
+    try {
+      const account = await this.findByName(user.userName);
+      if (bcrypt.compareSync(input.password, account.password)) {
+        account.password = bcrypt.hashSync(input.newPassword, 5);
+        await this.accountRepository.update(user.id, account);
+        return true;
+      } else {
+        this.logger.error(`Wrong password!`);
+        throw new BadRequestException(`Wrong password!`);
+      }
+    } catch (error) {
+      throw HttpException.createBody(error);
+    }
+  }
+
+  async delete(id: number): Promise<boolean> {
+    try {
+      const result = await this.accountRepository.delete(id);
+      if (result.affected === 0) {
+        this.logger.error(`account not found!`);
+        throw new NotFoundException(`account not found`);
+      }
+      return true;
+    } catch (error) {
+      throw HttpException.createBody(error);
+    }
+  }
+
   async createToken(payload: AuthPayload): Promise<TokenOutput> {
     try {
       const accessToken = await this.jwtService.signAsync(payload);
@@ -104,6 +136,19 @@ export class AccountService {
       };
       this.cacheService.set(payload.id.toString(), token, 3600 * 10);
       return token;
+    } catch (error) {
+      throw HttpException.createBody(error);
+    }
+  }
+
+  async checkToken(id: number): Promise<boolean> {
+    try {
+      const token = await this.cacheService.get(id.toString());
+      if (!token) {
+        this.logger.error(`Token not found!`);
+        throw new NotFoundException('Token not found');
+      }
+      return true;
     } catch (error) {
       throw HttpException.createBody(error);
     }
@@ -140,19 +185,6 @@ export class AccountService {
       }
     } catch (error) {
       this.handleJwtError(error, 'refreshToken');
-      throw HttpException.createBody(error);
-    }
-  }
-
-  async checkToken(id: number): Promise<boolean> {
-    try {
-      const token = await this.cacheService.get(id.toString());
-      if (!token) {
-        this.logger.error(`Token not found!`);
-        throw new NotFoundException('Token not found');
-      }
-      return true;
-    } catch (error) {
       throw HttpException.createBody(error);
     }
   }

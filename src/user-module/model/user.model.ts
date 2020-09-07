@@ -19,7 +19,7 @@ export class User {
   @PrimaryColumn()
   accountId: number;
 
-  @OneToOne(() => Account)
+  @OneToOne(() => Account, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'accountId' })
   account: Account;
 
