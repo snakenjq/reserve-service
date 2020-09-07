@@ -11,6 +11,14 @@ export interface EnvConfig {
       expiresIn: number;
     };
   };
+  redisConfig: {
+    host: string;
+    port: number;
+    db: number;
+    password: string;
+    keyPrefix: string;
+    onClientReady: () => {};
+  };
   typeOrmConfig: TypeOrmModuleOptions;
   graphConfig: GqlModuleOptions;
 }

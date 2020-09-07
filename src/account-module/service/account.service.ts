@@ -10,12 +10,12 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
-import { Cron } from '@nestjs/schedule';
 import * as bcrypt from 'bcrypt';
 
-import { Account, Token } from '../model';
+import { Account } from '../model';
 import { CreateAccountInput, TokenOutput } from '../dto';
 import { AuthPayload } from '../interface';
+import { CacheService } from './redis.service';
 
 @Injectable()
 export class AccountService {
@@ -23,9 +23,8 @@ export class AccountService {
   constructor(
     @InjectRepository(Account)
     private readonly accountRepository: Repository<Account>,
-    @InjectRepository(Token)
-    private readonly tokenRepository: Repository<Token>,
     private readonly jwtService: JwtService,
+    private readonly cacheService: CacheService,
   ) {}
 
   async signUp(input: CreateAccountInput): Promise<Account> {
@@ -99,12 +98,12 @@ export class AccountService {
       const refreshToken = await this.jwtService.signAsync(payload, {
         expiresIn: 3600 * 10,
       });
-      const tokenEntity: Token = new Token();
-      tokenEntity.accountId = payload.id;
-      tokenEntity.accessToken = accessToken;
-      tokenEntity.refreshToken = refreshToken;
-      await this.tokenRepository.save(tokenEntity);
-      return tokenEntity;
+      const token: TokenOutput = {
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+      };
+      this.cacheService.set(payload.id.toString(), token, 3600 * 10);
+      return token;
     } catch (error) {
       throw HttpException.createBody(error);
     }
@@ -147,10 +146,10 @@ export class AccountService {
 
   async checkToken(id: number): Promise<boolean> {
     try {
-      const token = await this.tokenRepository.findOne(id);
+      const token = await this.cacheService.get(id.toString());
       if (!token) {
-        this.logger.error(`accessToken not found!`);
-        throw new NotFoundException('accessToken not found');
+        this.logger.error(`Token not found!`);
+        throw new NotFoundException('Token not found');
       }
       return true;
     } catch (error) {
@@ -158,41 +157,41 @@ export class AccountService {
     }
   }
 
-  async checkExpireTokens(): Promise<void> {
-    try {
-      const tokens = await this.tokenRepository.find();
-      tokens.map(async token => {
-        try {
-          await this.jwtService.verifyAsync(token.refreshToken);
-        } catch (error) {
-          if (error.message == 'jwt expired') {
-            this.logger.verbose('delete expired refreshToken');
-            await this.deleteToken(token.accountId);
-          }
-        }
-      });
-    } catch (error) {
-      throw HttpException.createBody(error);
-    }
-  }
+  // async checkExpireTokens(): Promise<void> {
+  //   try {
+  //     const tokens = await this.tokenRepository.find();
+  //     tokens.map(async token => {
+  //       try {
+  //         await this.jwtService.verifyAsync(token.refreshToken);
+  //       } catch (error) {
+  //         if (error.message == 'jwt expired') {
+  //           this.logger.verbose('delete expired refreshToken');
+  //           await this.deleteToken(token.accountId);
+  //         }
+  //       }
+  //     });
+  //   } catch (error) {
+  //     throw HttpException.createBody(error);
+  //   }
+  // }
 
-  async deleteToken(id: number): Promise<boolean> {
-    try {
-      const result = await this.tokenRepository.delete(id);
-      if (result.affected === 0) {
-        throw new NotFoundException(`Not found the token with ID: "${id}".`);
-      }
-      return true;
-    } catch (error) {
-      throw HttpException.createBody(error);
-    }
-  }
+  // async deleteToken(id: number): Promise<boolean> {
+  //   try {
+  //     const result = await this.tokenRepository.delete(id);
+  //     if (result.affected === 0) {
+  //       throw new NotFoundException(`Not found the token with ID: "${id}".`);
+  //     }
+  //     return true;
+  //   } catch (error) {
+  //     throw HttpException.createBody(error);
+  //   }
+  // }
 
-  @Cron('00 00 * * * *')
-  async handleCron() {
-    this.logger.verbose(`schedule request start at ${new Date().toString()}`);
-    await this.checkExpireTokens();
-  }
+  // @Cron('00 00 * * * *')
+  // async handleCron() {
+  //   this.logger.verbose(`schedule request start at ${new Date().toString()}`);
+  //   await this.checkExpireTokens();
+  // }
 
   private readonly handleJwtError = (error: any, tokenType: string) => {
     switch (error.message) {

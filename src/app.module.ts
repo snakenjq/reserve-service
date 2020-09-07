@@ -4,6 +4,7 @@ import {
   MiddlewareConsumer,
   RequestMethod,
 } from '@nestjs/common';
+import { RedisModule } from 'nestjs-redis';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -20,6 +21,7 @@ import { UserModule } from 'user-module';
   imports: [
     TypeOrmModule.forRoot(config.get('typeOrmConfig')),
     GraphQLModule.forRoot(config.get('graphConfig')),
+    RedisModule.register(config.get('redisConfig')),
     ScheduleModule.forRoot(),
     AccountModule,
     UserModule,

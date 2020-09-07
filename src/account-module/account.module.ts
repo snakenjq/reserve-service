@@ -4,22 +4,21 @@ import { JwtModule } from '@nestjs/jwt';
 import * as config from 'config';
 
 import {
-  Token,
   Account,
   AccountService,
   AccountResolver,
   AccountController,
+  CacheService,
 } from '.';
 import { UserModule } from 'user-module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Account]),
-    TypeOrmModule.forFeature([Token]),
     JwtModule.register(config.get('jwtConfig')),
     UserModule,
   ],
-  providers: [AccountService, AccountResolver],
+  providers: [AccountService, AccountResolver, CacheService],
   controllers: [AccountController],
   exports: [AccountService],
 })

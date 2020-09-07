@@ -21,7 +21,6 @@ export class UserService {
     const userEntity: User = new User();
     userEntity.accountId = account.id;
     userEntity.role = input.role;
-    // console.log('>>>>userEntity: ', userEntity);
     try {
       return this.userRepository.save(userEntity);
     } catch (error) {

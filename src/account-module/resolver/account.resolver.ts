@@ -1,4 +1,4 @@
-import { ValidationPipe, Logger, UseFilters } from '@nestjs/common';
+import { ValidationPipe, Logger, UseFilters, UseGuards } from '@nestjs/common';
 import { Resolver, Mutation, Args, Query } from '@nestjs/graphql';
 
 import { AccountService } from '../service';
@@ -6,6 +6,7 @@ import { Account } from '../model';
 import { CreateAccountInput, TokenOutput } from '../dto';
 import { GetUser, GqlAuth } from '../decorator';
 import { GraphqlExceptionFilter, RoleType } from '../../common';
+import { GqlAuthGuard } from 'account-module/guard';
 
 @Resolver()
 @UseFilters(GraphqlExceptionFilter)
@@ -32,6 +33,7 @@ export class AccountResolver {
   }
 
   @Query(() => TokenOutput)
+  @UseGuards(GqlAuthGuard)
   async refreshToken(
     @Args('refreshToken') refreshToken: string,
   ): Promise<Object> {

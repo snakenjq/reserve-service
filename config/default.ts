@@ -1,5 +1,6 @@
 import { EnvConfig } from './env.config';
 import { join } from 'path';
+import * as redisStore from 'cache-manager-redis-store';
 
 const DB_TYPE = 'postgres';
 const GRAPH_SCHEMA_PATH = 'graphql/schema.gql';
@@ -13,6 +14,16 @@ export default {
     secret: 'topSecret51',
     signOptions: {
       expiresIn: 3600,
+    },
+  },
+  redisConfig: {
+    host: 'localhost',
+    port: 6379,
+    db: 0,
+    password: '',
+    keyPrefix: 'token_',
+    onClientReady: client => {
+      client.on('error', err => {});
     },
   },
   typeOrmConfig: {
