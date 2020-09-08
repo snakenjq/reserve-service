@@ -15,9 +15,9 @@ export class UserResolver {
   @Query(() => User)
   @UseGuards(GqlAuthGuard)
   async createUser(
-    @GetUser('graphql') user,
+    @GetUser('graphql') account,
     @Args('input') input: CreateUserInput,
   ): Promise<User> {
-    return this.userService.create(user, input);
+    return this.userService.create(account, input);
   }
 }

@@ -14,7 +14,7 @@ import * as bcrypt from 'bcrypt';
 
 import { Account } from '../model';
 import { CreateAccountInput, TokenOutput, UpdatePasswordInput } from '../dto';
-import { AuthPayload } from '../interface';
+import { AuthPayload, TokenInterface } from '../interface';
 import { CacheService } from './redis.service';
 
 @Injectable()
@@ -141,12 +141,21 @@ export class AccountService {
     }
   }
 
-  async checkToken(id: number): Promise<boolean> {
+  async checkToken(id: number, tokenInput: TokenInterface): Promise<boolean> {
     try {
       const token = await this.cacheService.get(id.toString());
       if (!token) {
         this.logger.error(`Token not found!`);
         throw new NotFoundException('Token not found');
+      }
+      const { accessToken, refreshToken } = token;
+      if (tokenInput.accessToken && accessToken !== tokenInput.accessToken) {
+        this.logger.error(`accessToken wrong!`);
+        throw new BadRequestException('accessToken wrong!');
+      }
+      if (tokenInput.refreshToken && refreshToken !== tokenInput.refreshToken) {
+        this.logger.error(`refreshToken wrong!`);
+        throw new BadRequestException('refreshToken wrong!');
       }
       return true;
     } catch (error) {
@@ -160,7 +169,8 @@ export class AccountService {
       const payload: AuthPayload = this.jwtService.decode(
         accessToken,
       ) as AuthPayload;
-      if (await this.checkToken(payload.id)) {
+      const token: TokenInterface = { accessToken: accessToken };
+      if (await this.checkToken(payload.id, token)) {
         const account = await this.findById(payload.id);
         delete account.password;
         return account;
@@ -180,7 +190,9 @@ export class AccountService {
       const refreshPayload: AuthPayload = {
         id: payload.id,
       };
-      if (await this.checkToken(refreshPayload.id)) {
+      const token: TokenInterface = { refreshToken: refreshToken };
+      console.log('>>>>refreshToken:', token);
+      if (await this.checkToken(refreshPayload.id, token)) {
         return await this.createToken(refreshPayload);
       }
     } catch (error) {

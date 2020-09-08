@@ -21,22 +21,14 @@ export class AccountResolver {
   }
 
   @Query(() => TokenOutput)
-  async signIn(@Args('input') input: CreateAccountInput): Promise<Object> {
+  async signIn(@Args('input') input: CreateAccountInput): Promise<TokenOutput> {
     return await this.accountService.signIn(input);
-  }
-
-  @Query(() => TokenOutput)
-  @UseGuards(GqlAuthGuard)
-  async refreshToken(
-    @Args('refreshToken') refreshToken: string,
-  ): Promise<Object> {
-    return await this.accountService.verifyRefreshToken(refreshToken);
   }
 
   @Mutation(() => Account)
   @UseGuards(GqlAuthGuard)
   async updatePassword(
-    @GetUser('graphql') user,
+    @GetUser('graphql') user: Account,
     @Args('input') input: UpdatePasswordInput,
   ): Promise<Account> {
     await this.accountService.updatePassword(user, input);
@@ -47,5 +39,19 @@ export class AccountResolver {
   @GqlAuth(RoleType.ADMIN)
   async deleteAccountByID(@Args('id') id: number): Promise<boolean> {
     return this.accountService.delete(id);
+  }
+
+  @Query(() => TokenOutput)
+  @UseGuards(GqlAuthGuard)
+  async refreshToken(
+    @Args('refreshToken') refreshToken: string,
+  ): Promise<Object> {
+    return await this.accountService.verifyRefreshToken(refreshToken);
+  }
+
+  @Query(() => Account)
+  @UseGuards(GqlAuthGuard)
+  async getAccount(@GetUser('graphql') user: Account): Promise<Account> {
+    return await this.accountService.findById(user.id);
   }
 }

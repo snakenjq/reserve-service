@@ -10,13 +10,11 @@ import {
   AccountController,
   CacheService,
 } from '.';
-import { UserModule } from 'user-module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Account]),
     JwtModule.register(config.get('jwtConfig')),
-    UserModule,
   ],
   providers: [AccountService, AccountResolver, CacheService],
   controllers: [AccountController],
