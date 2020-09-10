@@ -3,7 +3,12 @@ import { Resolver, Mutation, Args, Query } from '@nestjs/graphql';
 
 import { AccountService } from '../service';
 import { Account } from '../model';
-import { CreateAccountInput, TokenOutput, UpdatePasswordInput } from '../dto';
+import {
+  CreateAccountInput,
+  TokenOutput,
+  UpdatePasswordInput,
+  AccountOutput,
+} from '../dto';
 import { GetUser, GqlAuth } from '../decorator';
 import { GraphqlExceptionFilter, RoleType } from '../../common';
 import { GqlAuthGuard } from 'account-module/guard';
@@ -37,7 +42,7 @@ export class AccountResolver {
 
   @Mutation(() => Boolean)
   @GqlAuth(RoleType.ADMIN)
-  async deleteAccountByID(@Args('id') id: number): Promise<boolean> {
+  async deleteAccountById(@Args('id') id: number): Promise<boolean> {
     return this.accountService.delete(id);
   }
 
@@ -49,9 +54,15 @@ export class AccountResolver {
     return await this.accountService.verifyRefreshToken(refreshToken);
   }
 
-  @Query(() => Account)
+  @Query(() => AccountOutput)
   @UseGuards(GqlAuthGuard)
-  async getAccount(@GetUser('graphql') user: Account): Promise<Account> {
-    return await this.accountService.findById(user.id);
+  async getAccount(@GetUser('graphql') user: Account): Promise<AccountOutput> {
+    return await this.accountService.getById(user.id);
+  }
+
+  @Query(() => AccountOutput)
+  @GqlAuth(RoleType.ADMIN, RoleType.EMPLOYEE)
+  async getAccountById(@Args('id') id: number): Promise<AccountOutput> {
+    return await this.accountService.getById(id);
   }
 }

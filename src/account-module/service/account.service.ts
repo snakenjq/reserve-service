@@ -13,9 +13,15 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
 import { Account } from '../model';
-import { CreateAccountInput, TokenOutput, UpdatePasswordInput } from '../dto';
+import {
+  CreateAccountInput,
+  TokenOutput,
+  UpdatePasswordInput,
+  AccountOutput,
+} from '../dto';
 import { AuthPayload, TokenInterface } from '../interface';
 import { CacheService } from './redis.service';
+import { UserService } from 'user-module';
 
 @Injectable()
 export class AccountService {
@@ -25,6 +31,7 @@ export class AccountService {
     private readonly accountRepository: Repository<Account>,
     private readonly jwtService: JwtService,
     private readonly cacheService: CacheService,
+    private readonly userService: UserService,
   ) {}
 
   async signUp(input: CreateAccountInput): Promise<Account> {
@@ -86,6 +93,19 @@ export class AccountService {
         throw new NotFoundException(`account not found`);
       }
       delete account.password;
+      return account;
+    } catch (error) {
+      throw HttpException.createBody(error);
+    }
+  }
+
+  async getById(id: number): Promise<AccountOutput> {
+    const account = await this.findById(id);
+    try {
+      const user = await this.userService.findById(account.id);
+      if (user) {
+        account['user'] = user;
+      }
       return account;
     } catch (error) {
       throw HttpException.createBody(error);
@@ -201,42 +221,6 @@ export class AccountService {
     }
   }
 
-  // async checkExpireTokens(): Promise<void> {
-  //   try {
-  //     const tokens = await this.tokenRepository.find();
-  //     tokens.map(async token => {
-  //       try {
-  //         await this.jwtService.verifyAsync(token.refreshToken);
-  //       } catch (error) {
-  //         if (error.message == 'jwt expired') {
-  //           this.logger.verbose('delete expired refreshToken');
-  //           await this.deleteToken(token.accountId);
-  //         }
-  //       }
-  //     });
-  //   } catch (error) {
-  //     throw HttpException.createBody(error);
-  //   }
-  // }
-
-  // async deleteToken(id: number): Promise<boolean> {
-  //   try {
-  //     const result = await this.tokenRepository.delete(id);
-  //     if (result.affected === 0) {
-  //       throw new NotFoundException(`Not found the token with ID: "${id}".`);
-  //     }
-  //     return true;
-  //   } catch (error) {
-  //     throw HttpException.createBody(error);
-  //   }
-  // }
-
-  // @Cron('00 00 * * * *')
-  // async handleCron() {
-  //   this.logger.verbose(`schedule request start at ${new Date().toString()}`);
-  //   await this.checkExpireTokens();
-  // }
-
   private readonly handleJwtError = (error: any, tokenType: string) => {
     switch (error.message) {
       case 'jwt expired':
@@ -245,6 +229,9 @@ export class AccountService {
       case 'invalid signature':
         this.logger.error(`${tokenType} signature verify failed`);
         throw new UnauthorizedException(`${tokenType} signature verify failed`);
+      case 'jwt malformed':
+        this.logger.error(`${tokenType} jwt malformed`);
+        throw new UnauthorizedException(`${tokenType} jwt malformed`);
     }
   };
 }

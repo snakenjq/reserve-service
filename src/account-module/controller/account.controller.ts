@@ -14,7 +14,12 @@ import {
 } from '@nestjs/common';
 
 import { AccountService } from '../service';
-import { CreateAccountInput, TokenOutput, UpdatePasswordInput } from '../dto';
+import {
+  CreateAccountInput,
+  TokenOutput,
+  UpdatePasswordInput,
+  AccountOutput,
+} from '../dto';
 import { Account } from '../model';
 import { RestfulExceptionFilter, RoleType } from '../../common';
 import { GetUser } from 'account-module';
@@ -70,7 +75,21 @@ export class AccountController {
   @UseGuards(RestfulAuthGuard)
   async refreshToken(
     @Param('refreshToken') refreshToken: string,
-  ): Promise<Object> {
+  ): Promise<TokenOutput> {
     return await this.accountService.verifyRefreshToken(refreshToken);
+  }
+
+  @Get()
+  @UseGuards(RestfulAuthGuard)
+  async getAccount(@GetUser() user): Promise<AccountOutput> {
+    return await this.accountService.getById(user.id);
+  }
+
+  @Get('/getAccount/:id') //?路径写法
+  @RestfulAuth(RoleType.ADMIN)
+  async getAccountById(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<AccountOutput> {
+    return await this.accountService.getById(id);
   }
 }

@@ -9,7 +9,7 @@ import { Repository } from 'typeorm';
 
 import { User } from '../model';
 import { CreateUserInput } from '../dto';
-import { AccountService } from 'account-module';
+
 @Injectable()
 export class UserService {
   private readonly logger = new Logger('UserService');

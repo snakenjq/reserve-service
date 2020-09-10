@@ -7,19 +7,6 @@ type TokenOutput {
   refreshToken: String!
 }
 
-type Account {
-  id: Float!
-  userName: String!
-  password: String!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-}
-
-"""
-A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
-"""
-scalar DateTime
-
 type User {
   role: RoleType!
   createdAt: DateTime!
@@ -32,11 +19,37 @@ enum RoleType {
   USER
 }
 
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type AccountOutput {
+  id: Float!
+  userName: String!
+  user: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Account {
+  id: Float!
+  userName: String!
+  password: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
 type Query {
+  createUser(input: CreateUserInput!): User!
   signIn(input: CreateAccountInput!): TokenOutput!
   refreshToken(refreshToken: String!): TokenOutput!
-  getAccount: Account!
-  createUser(input: CreateUserInput!): User!
+  getAccount: AccountOutput!
+  getAccountById(id: Float!): AccountOutput!
+}
+
+input CreateUserInput {
+  role: RoleType!
 }
 
 input CreateAccountInput {
@@ -44,14 +57,10 @@ input CreateAccountInput {
   password: String!
 }
 
-input CreateUserInput {
-  role: RoleType!
-}
-
 type Mutation {
   signUp(input: CreateAccountInput!): Account!
   updatePassword(input: UpdatePasswordInput!): Account!
-  deleteAccountByID(id: Float!): Boolean!
+  deleteAccountById(id: Float!): Boolean!
 }
 
 input UpdatePasswordInput {
